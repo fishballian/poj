@@ -1,0 +1,97 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+struct int_node
+{
+    int data;
+    struct int_node *pre;
+    struct int_node *next;
+};
+
+typedef struct int_node Node;
+
+Node *new(int n)
+{
+    int i;
+    Node *p, *pre;
+    Node *first = malloc(sizeof(Node));
+    first->data = 0;
+    pre = first;
+    for(i = 1; i < n; i++)
+    {
+
+        p = malloc(sizeof(Node));
+        pre->next = p;
+        p->pre = pre;
+        p->data = i;
+        pre = p;
+    }
+    p->next = first;
+    first->pre = p;
+}
+
+void delete(Node *p)
+{
+    Node *pre = p->pre;
+    Node *next = p->next;
+    pre->next = next;
+    next->pre = pre;
+    free(p);
+}
+
+void delete_all(Node *p)
+{
+    Node *next = p->next;
+    p->next = NULL;
+    while(next != NULL)
+    {
+        p = next->next;
+        free(next);
+        next = p;
+    }
+}
+
+int is_solution(int k, int i)
+{
+    int j, u, r;
+    Node *p, *tmp;
+    r = 1;
+    p = new(2 * k);
+    for(j = 0; j < k; j++)
+    {
+        for(u = 1; u < i; u++)
+            p = p->next;
+        if(p->data < k)
+        {
+            r = 0;
+            break;
+        }
+        else
+        {
+            tmp = p->next;
+            delete(p);
+            p = tmp;
+        }
+    }
+    delete_all(p);
+    return r;
+}
+
+int find_solution(int k)
+{
+    int i;
+    for(i = 1; i < 1000000; i++)
+        if(is_solution(k, i))
+            return i;
+    return -1;
+}
+
+int main()
+{
+    int k;
+    while(scanf("%d", &k) && k > 0)
+    {
+        printf("%d\n", find_solution(k));
+    }
+    return 0;
+}
