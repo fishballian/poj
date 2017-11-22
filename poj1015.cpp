@@ -1,7 +1,8 @@
 #include<iostream>
 #include<cmath>
+#include<cstdlib>
 using namespace std;
-int a[200][2];
+int a[200][3];
 int n, m;
 int r[20];
 int r2[20];
@@ -9,15 +10,40 @@ int D, P;
 int cut[200][20];
 int diff[200];
 
+int cmp1(const void *a, const void *b)
+{
+    return (*(int(*)[3])b)[0] - (*(int(*)[3])a)[0];
+}
+
+int cmp2(const void *a, const void *b)
+{
+    return (*(int(*)[3])b)[1] - (*(int(*)[3])a)[1];
+}
+
 void gen_cut()
 {
-    int i, j, arr;
+    int i, j, k, s;
+    qsort(a, n, sizeof(a[0]), &cmp1);
     for(i = 0; i < n; i++)
     {
         for(j = 0; j + i < n && j < m; j++)
         {
+            s = 0;
+            for(k = 0; k < j;)
+            {
+                if(a[k][2] >= i)
+                {
+                    s+=a[k][0];
+                    k++;
+                }
+            }
         }
     }
+
+    //qsort(a, n, sizeof(a[0]), &cmp2);
+    //for(i = 0; i < n; i++)
+    //    cout << a[i][1] << " ";
+    //cout << endl;
 }
 
 void dfs(int d, int u)
@@ -43,7 +69,7 @@ void dfs(int d, int u)
     }
     if(u >= n)
         return;
-    r[d] = u;
+    r[d] = a[u][2];
     dfs(d + 1, u + 1);
     dfs(d, u + 1);
 }
@@ -57,6 +83,7 @@ int main()
         for(i = 0; i < n; i++)
         {
             cin >> a[i][0] >> a[i][1];
+            a[i][2] = i;
             diff[i] = a[i][0] - a[i][1];
         }
         D = 20 * 20;
