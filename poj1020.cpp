@@ -1,77 +1,73 @@
 #include<iostream>
+#include<cstring>
 using namespace std;
-int n;
-int s;
-int a[16];
-int p[16][2];
+int n, s;
+int c[11];
+int d[40];
+bool r;
 
-int cmp(const void *a, const void *b)
+void dfs(int deep)
 {
-    return *(int *)a - *(int *)b;
-}
-
-bool in_range(float x, float y, int i)
-{
-    int a1, a2, a3, a4;
-    a1 = p[i][0];
-    a2 = a1 + a[i];
-    a3 = p[i][1];
-    a4 = a3 + a[i];
-    return a1 < x && a2 > x && a3 < y && a4 > y;
-}
-
-bool is_overlap(int x, int y, int t)
-{
-    int i, l;
-    for(i = 0; i < t; i++)
+    int i, k, put, p;
+    bool f;
+    if(deep == n)
     {
-        if(in_range(x, y, i)
-                || in_range(x + a[t], y, i)
-                || in_range(x, y + a[t], i)
-                || in_range(x + a[t], y + a[t], i)
-                || in_range((x + a[t]) / 2.0, (y + a[t]) / 2.0, i))
-            return true;
+        r = true;
+        return;
     }
-    return false;
+    put = 41;
+    for(i = 0; i < s; i++)
+    {
+		if(d[i] < put)
+        {
+            put = d[i];
+            p = i;
+        }
+    }
+    for(i = 10; i > 0; i--)
+    {
+        if(c[i] > 0 && d[p] + i <= s && p + i <= s)
+        {
+            f = true;
+            for(k = p + 1; k < p + i; k++)
+            {
+                if(d[k] != d[p]) 
+                {
+                    f = false;
+                    break;
+                }
+            }
+            if(f)
+            {
+                for(k = p; k < p + i; k++) d[k] += i;
+                c[i]--;
+                dfs(deep + 1);
+                c[i]++;
+                for(k = p; k < p + i; k++) d[k] -= i;
+            }
+        }
+    }
 }
 
 bool can_cut()
 {
-    int i, j, k, u;
-    bool f, t;
-    j = 0;
-    for(i = 0; i < n; i++)
-        j += a[i] * a[i];
-    if(s * s != j)
-        return false;
-    qsort(a, n, sizeof(a[0]), &cmp);
-    for(i = 0; i < n; i++)
+    int i, sum;
+    sum = 0;
+    for(i = 1; i <= 10; i++)
     {
-        f = false;
-        for(j = 0; j < s; j++)
-        {
-            if(f) break;
-            for(k = 0; k < s; k++)
-            {
-                if(!is_overlap(j, k, i))
-                {
-                    f = true;
-                    p[i][0] = j;
-                    p[i][1] = k;
-                    break;
-                }
-            }
-        }
-        if(!f)
-            return false;
+        sum += i * i * c[i];
     }
-    return true;
+    if(sum != s * s)
+        return false;
+    memset(d, 0, sizeof(d));
+    r = false;
+    dfs(0);
+    return r;
 }
-
 
 int main()
 {
-    int t, i, j;
+    int t, i, j, tmp, sum;
 #ifdef _POJ
     freopen("poj1020.txt", "r", stdin);
 #endif
@@ -79,8 +75,12 @@ int main()
     for(i = 0; i < t; i++)
     {
         cin >> s >> n;
+        memset(c, 0, sizeof(c));
         for(j = 0; j < n; j++)
-            cin >> a[j];
+        {
+            cin >> tmp;
+            c[tmp] ++;
+        }
         if(can_cut())
             cout << "KHOOOOB";
         else

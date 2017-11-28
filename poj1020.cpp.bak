@@ -1,0 +1,93 @@
+#include<iostream>
+#include<cstring>
+#include<cstdlib>
+using namespace std;
+int n;
+int s;
+int a[16];
+int p[16][2];
+int grid[40][40];
+
+int cmp(const void *a, const void *b)
+{
+    return *(int *)b - *(int *)a;
+}
+
+
+bool is_overlap(int x, int y, int len)
+{
+    int i, j;
+    for(i = x; i < x + len; i++)
+        for(j = y; j < y + len; j++)
+            if(grid[i][j] == 1)
+                return true;
+    return false;
+}
+
+void place(int x, int y, int i)
+{
+    int j, k;
+    p[i][0] = j;
+    p[i][1] = k;
+    for(j = x; j < x + a[i]; j++)
+        for(k = y; k < y + a[i]; k++)
+            grid[j][k] = 1;
+}
+
+bool can_cut()
+{
+    int i, j, k, u;
+    bool f, t;
+    j = 0;
+    for(i = 0; i < n; i++)
+        j += a[i] * a[i];
+    if(s * s != j)
+        return false;
+    memset(grid, 0, sizeof(grid));
+    qsort(a, n, sizeof(a[0]), &cmp);
+    for(i = 0; i < n; i++)
+    {
+        f = false;
+        for(j = 0; j < s && j + a[i] <= s ; j++)
+        {
+            if(f) break;
+            for(k = 0; k < s && k + a[i] <= s; k++)
+            {
+                if(!is_overlap(j, k, a[i]))
+                {
+                    cout << j << "," << k << "," <<a[i]<< "," << is_overlap(j, k, a[i]) << endl;
+                    f = true;
+                    place(j, k, i);
+                    p[i][0] = j;
+                    p[i][1] = k;
+                    break;
+                }
+            }
+        }
+        if(!f)
+            return false;
+    }
+    return true;
+}
+
+
+int main()
+{
+    int t, i, j;
+#ifdef _POJ
+    freopen("poj1020.txt", "r", stdin);
+#endif
+    cin >> t;
+    for(i = 0; i < t; i++)
+    {
+        cin >> s >> n;
+        for(j = 0; j < n; j++)
+            cin >> a[j];
+        if(can_cut())
+            cout << "KHOOOOB";
+        else
+            cout <<"HUTUTU";
+        cout << "!" << endl;
+    }
+    return 0;
+}
