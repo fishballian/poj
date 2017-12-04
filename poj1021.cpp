@@ -12,6 +12,7 @@ int p2;
 
 typedef struct
 {
+    int n;
     int x;
     int y;
     int val;
@@ -99,6 +100,7 @@ cluster normalform(int a[10000][2], int n)
     clu.x = xlen;
     clu.y = ylen;
     clu.val = value;
+    clu.n = n;
     return clu;
 
 }
@@ -167,6 +169,8 @@ int cmp(const void *a, const void *b)
 {
     cluster* pa = (cluster *)a;
     cluster* pb = (cluster *)b;
+    if(pa->n != pb->n)
+        return pa->n - pb->n;
     if(pa->x != pb->x)
         return pa->x - pb->x;
     if(pa->y != pb->y)
@@ -185,6 +189,8 @@ bool is_equal()
     qsort(c2, p2, sizeof(c1[0]), &cmp);
     for(i = 0; i < p1; i++)
     {
+        if(c1[i].n != c2[i].n)
+            return false;
         if(c1[i].x != c2[i].x)
             return false;
         if(c1[i].y != c2[i].y)

@@ -4,36 +4,35 @@ using namespace std;
 class A
 {
     public:
-        A(int a)
+        A(int a) : data(a)
         {
-            data = a;
             cout << "A init " << data << endl;
+        }
+        A(const A& b)
+        {
+            data = b.data;
+            cout << "A copy " << data << endl;
         }
         ~A()
         {
             cout << "A delete " << data << endl;
         }
-    private:
         int data;
 };
 
-void foo()
+vector<A> foo()
 {
+    vector<A> v;
     A a(1);
+    v.push_back(a);
+    return v;
 }
 
 int main()
 {
-    int i;
-    A b(2);
-    A *p = new A(3);
-    foo();
+    vector<A> vv;
+    vv = foo();
     cout << "Program Terminate" << endl;
-    delete p;
-    vector<int> v;
-    for(i = 0; i < 10000; i++)
-        v.push_back(i);
-    cout << v.size() << endl;
     return 0;
 }
 
