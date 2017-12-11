@@ -1,0 +1,79 @@
+#include<stdio.h>
+#include<string.h>
+int n;
+
+void multi(int a[26][26], int b[26][26], int c[26][26])
+{
+    int s;
+    for(int i = 0; i < n; i++)
+        for(int j = 0; j < n; j++)
+        {
+            s = 0;
+            for(int k = 0; k < n; k++)
+                s += a[i][k] * b[j][k];
+            c[i][j] = s;
+        }
+}
+
+void copy(int a[26][26], int b[26][26])
+{
+    for(int i = 0; i < n; i++)
+        for(int j = 0; j < n; j++)
+            a[i][j] = b[i][j];
+}
+
+void power(int a[26][26], int c[26][26], int n)
+{
+    int b[26][26];
+    copy(b, a);
+    copy(b, a);
+    for(int i = 0; i < n; i++)
+    {
+        multi(b, a, c);
+        copy(b, c);
+    }
+}
+
+int main()
+{
+    int m;
+    int aj[26][26];
+    int c[26][26];
+    int x, y;
+    char s[4];
+    int finish;
+#ifdef _POJ
+    freopen("poj1094.txt", "r", stdin);
+#endif
+    while(scanf("%d%d", &n, &m) && n > 0)
+    {
+        memset(aj, 0, sizeof(aj));
+        finish = 0;
+        for(int i = 0; i < m; i++)
+        {
+            scanf("%s", s);
+            if(finish)
+                continue;
+            x = s[0] - 'A';
+            y = s[2] - 'A';
+            aj[x][y] = 1;
+            if(m < n)
+                continue;
+        }
+
+        copy(c, aj);
+        for(int k = 0; k <= n; k++)
+        {
+            power(aj, c, k);
+            for(int i = 0; i < n; i++)
+            {
+                for(int j = 0; j < n; j++)
+                    printf("%d ", c[i][j]);
+                printf("\n");
+            }
+            printf("\n");
+        }
+    }
+    return 0;
+}
+
