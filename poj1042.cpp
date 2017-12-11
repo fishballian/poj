@@ -5,7 +5,7 @@
 #include<cstring>
 #include<climits>
 using namespace std;
-int n, h, f[25], d[25], t[24];
+int n, h, f[25], d[25], t[25], tt[25];
 int dp[26][193][2];
 
 int calc_fish_num(int fi, int di, int times)
@@ -28,11 +28,11 @@ void construct_dp()
     memset(dp, 0, sizeof(dp));
     for(int i = n - 1; i >= 0; i--)
     {
-        for(int j = 1; j <= h * 12; j++) 
+        for(int j = 1; j <= h * 12 - tt[i]; j++) 
         {
             m = calc_fish_num(f[i], d[i], j);
             spend = j;
-            for(int k = j - t[i]; k >= 1; k--)
+            for(int k = j - t[i]; k >= 0; k--)
             {
                 u = calc_fish_num(f[i], d[i], k) + dp[i + 1][j - t[i] - k][0];
                 if(u > m)
@@ -55,6 +55,7 @@ int main()
 #endif
     while(scanf("%d", &n) && n > 0)
     {
+        memset(t, 0, sizeof(t));
         scanf("%d", &h);
         for(i = 0; i < n; i++)
             scanf("%d", &f[i]);
@@ -62,6 +63,9 @@ int main()
             scanf("%d", &d[i]);
         for(i = 0; i < n - 1; i++)
             scanf("%d", &t[i]);
+        tt[0] = 0;
+        for(i = 1; i <= n - 1; i ++)
+            tt[i] = tt[i - 1] + t[i - 1];
 #ifdef _TEST
         assert(calc_fish_num(10, 3, 1) == 10);
         assert(calc_fish_num(10, 3, 3) == 21);
@@ -74,7 +78,7 @@ int main()
         //for(i = 0; i < n; i++)
         //{
         //    for(int j = 0; j <= h * 12; j++)
-        //        printf("%2d ", dp[i][j][1]);
+        //        printf("%5d ", dp[i][j][0]);
         //    cout << endl;
         //}
         u = h * 12;
