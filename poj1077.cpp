@@ -7,6 +7,8 @@
 #include<map>
 #include<stack>
 using namespace std;
+char res[10000];
+int count;
 
 int calc(const string &s);
 bool do_move(string &s, char d);
@@ -62,7 +64,7 @@ bool operator< (const node &a, const node &b)
     return a.f > b.f;
 }
 
-void astar_search(string str)
+bool astar_search(string str)
 {
     priority_queue<node> openset;
     map<string, char> closeset;
@@ -72,7 +74,7 @@ void astar_search(string str)
     int i, j, sum, count = 0;
     stack<int> st;
     char t;
-   
+    bool finish = false;
     while(!openset.empty())
     {
         n = openset.top();
@@ -80,18 +82,20 @@ void astar_search(string str)
         closeset[n.s] = n.mv;
         if(n.s == "12345678x")
         {
+            finish = true;
             s2 = n.s;
             while((t = closeset.find(s2)->second) != 's')
             {
                 st.push(t);
                 do_move(s2, t);
             }
+            count = 0;
             while(!st.empty())
             {
-                printf("%c", revert(st.top()));
+                res[count++] = revert(st.top());
                 st.pop();
             }
-            printf("\n");
+            res[count++] = '\0';
             break;
         }
         n2 = n;
@@ -107,6 +111,7 @@ void astar_search(string str)
         if(n2.move('r') && closeset.find(n2.s) == closeset.end())
             openset.push(n2);
     }
+    return finish;
 }
 
 int calc(const string &s)
@@ -175,13 +180,6 @@ int main()
     assert(calc("12345678x") == 0);
     assert(calc("1234567x8") == 2);
     assert(calc("12345x786") == 2);
-    char ss[40] = "dlurullddrurdllurdr";
-    string xx = "23415x768";
-    for(i = 0; ss[i] != '\0'; i++)
-    {
-        do_move(xx, ss[i]);
-    }
-    assert(xx == "12345678x");
 #endif
     while(scanf("%s", s) != EOF)
     {
@@ -197,14 +195,27 @@ int main()
             for(j = i + 1; j < 9; j++)
                 if(ori[j] != 'x' && ori[i] != 'x' && ori[j] < ori[i])
                     sum++;
+        cout << ori << "=";
         if(sum % 2 == 1)
         {
+            assert(astar_search(ori) == false);
             printf("unsolvable\n");
+        }
+        else if(astar_search(ori))
+        {
+            for(i = 0; res[i] != '\0'; i++)
+            {
+                do_move(ori, res[i]);
+            }
+            assert(ori == "12345678x");
+            printf("%s\n", res);
         }
         else
         {
-            astar_search(ori);
+            printf("unknown error, ori=");
+            cout << ori << endl;
         }
+
     }
 
     return 0;
