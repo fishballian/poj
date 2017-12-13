@@ -1,238 +1,161 @@
 #include<iostream>
 #include<cstdio>
-#include<cstdlib>
-#include<cassert>
 #include<cmath>
-#include<queue>
-#include<map>
-#include<stack>
+#include<cstring>
 using namespace std;
-char res[10000];
-int count;
 
-int calc(const string &s);
-bool do_move(string &s, char d);
-
-char revert(char dir)
+int mabs(int a)
 {
-    char mv = 'l';
-    switch(dir)
-    {
-        case 'u':
-            mv = 'd';
-            break;
-        case 'd':
-            mv = 'u';
-            break;
-        case 'l':
-            mv = 'r';
-            break;
-    }
-    return mv;
+    if(a < 0)
+        return -a;
+    else
+        return a;
 }
 
-class node
-{
-    public:
-        node(){}
-        node(string s, char mv, int len) : s(s), mv(mv), len(len){
-            f = len + calc(s);
-        }
-        
-        bool move(char dir)
-        {
-            if(do_move(s, dir))
-            {
-                len++;
-                mv = dir;
-                f = len + calc(s);
-            }
-            else
-                return false;
-        }
-        string s;
-        char mv;
-        int len;
-        int f;
-};
+struct Status 
+{ 
+    int board[3][3]; 
+    int px,py; 
+}; 
+Status init,target={1,2,3,4,5,6,7,8,9,2,2}; 
+int targetPos[10][2],path[10000],maxDepth; 
+int move[4][2]={0,-1,-1,0,0,1,1,0}; 
 
-bool operator< (const node &a, const node &b)
-{
-    return a.f > b.f;
+/*
+ *奇偶剪枝
+ *每移动一次X方块,必定需要移动一次另外的方块
+ *所以其他方块需要移动的次数+X方块移动的次数必定是偶数
+ */
+bool IsSolvable() 
+{ 
+    int i,j,k=0,sum=0,array[9]; 
+    for(i=0; i!=3; ++i) 
+        for(j=0; j!=3; ++j) 
+            array[k++] = init.board[i][j]; 
+    //除了X结点外,要到达目标位置需要移动的最大步数,因为在转换成了一维后原本可以上下移动的都被转化成了水平移动.
+    //但是幸运的是,他们是同奇同偶的.具体的证明我也不知道,画图有这么个规律
+    for(i = 0; i != 8; ++i) 
+        for(j = i + 1; j != 9; ++j) 
+            if(array[i] > array[j]) 
+                sum++; 
+    //这个是X方块到目标位置的最短步数,不管怎么移动,只要最后是在目标位置,必定是同奇同偶的.(简单的考虑就是撤销)
+    //而每一次的其他方块的移动都是与X方块的交换来实现的,所以他们的和必定是偶数
+    sum += mabs(init.px - targetPos[9][0]) + mabs(init.py - targetPos[9][1]);     
+    return sum % 2 == 0; 
 }
 
-bool astar_search(string str)
-{
-    priority_queue<node> openset;
-    map<string, char> closeset;
-    openset.push(node(str, 's', 0));
-    node n, n2;
-    string s2;
-    int i, j, sum, count = 0;
-    stack<int> st;
-    char t;
-    bool finish = false;
-    while(!openset.empty())
-    {
-        n = openset.top();
-        openset.pop();
-        closeset[n.s] = n.mv;
-        if(n.s == "12345678x")
-        {
-            finish = true;
-            s2 = n.s;
-            while(true)
-            {
-                if(closeset.find(s2) != closeset.end())
-                {
-                    t = closeset.find(s2)->second;
-                    if(t == 's')
-                        break;
-                    st.push(t);
-                    do_move(s2, revert(t));
-                }
-                else
-                {
-                    exit(-1);
-                }
-            }
-            count = 0;
-            while(!st.empty())
-            {
-                res[count++] = st.top();
-                st.pop();
-            }
-            res[count++] = '\0';
-            break;
-        }
-        n2 = n;
-        if(n2.move('u') && closeset.find(n2.s) == closeset.end())
-            openset.push(n2);
-        n2 = n;
-        if(n2.move('d') && closeset.find(n2.s) == closeset.end())
-            openset.push(n2);
-        n2 = n;
-        if(n2.move('l') && closeset.find(n2.s) == closeset.end())
-            openset.push(n2);
-        n2 = n;
-        if(n2.move('r') && closeset.find(n2.s) == closeset.end())
-            openset.push(n2);
-    }
-    return finish;
-}
+// heuristic function 
+//计算该状态需要移动的距离
+int H(Status &s)         
+{ 
+    int sum=0, tmp; 
+    for(int i = 0; i != 3; ++i) 
+        for(int j = 0; j != 3; ++j) 
+        { 
+            tmp = s.board[i][j]; 
+            if(tmp < 9) 
+                sum += mabs(i - targetPos[tmp][0]) + mabs(j-targetPos[tmp][1]); 
+        } 
+    return sum; 
+} 
 
-int calc(const string &s)
+void Output(int depth) 
 {
-    int i, n, sum;
-    sum = 0;
-    for(i = 0; i < 9; i++)
+    for(int i=0; i < depth; ++i) 
+        if(path[i] == 0) 
+            cout<<'l'; 
+        else if(path[i] == 1) 
+            cout<<'u'; 
+        else if(path[i] == 2) 
+            cout<<'r'; 
+        else cout<<'d'; 
+} 
+
+bool IDAStar(Status &s, int depth, int h, int prev) 
+{ 
+    if(memcmp(&s, &target, sizeof(Status)) == 0) 
     {
-        if(s[i] == 'x')
-            n = 8;
+        Output(depth); 
+        return true; 
+    } 
+    if(depth >= maxDepth) 
+        return false; 
+    Status ns; int nh,nx,ny,tmp;  //next status 
+    for(int k = 0; k != 4; ++k) 
+    { 
+        //这里会撤销上一步的移动,跳过
+        if(mabs(k - prev) == 2) 
+            continue; 
+        ns = s; 
+        nx = s.px + move[k][0]; 
+        ny = s.py + move[k][1]; 
+        //越界
+        if(nx < 0 || ny < 0 || nx == 3 || ny == 3) 
+            continue; 
+        //移动操作
+        tmp = s.board[nx][ny]; 
+        ns.board[s.px][s.py] = tmp; 
+        ns.board[nx][ny] = 9; 
+        ns.px = nx; ns.py = ny; 
+        //向上移动,并且x在与他交换的方块的目标位置的上方,也就是说,与他交换的方块理目标位置近了一步
+        //可能在上方也可能就是那个位置了
+        if(k == 0 && ny < targetPos[tmp][1]) 
+            nh = h - 1;   // l 
+        else if(k == 1 && nx < targetPos[tmp][0]) 
+            nh = h - 1;  // u 
+        else if(k == 2 && ny > targetPos[tmp][1]) 
+            nh = h - 1;  // r 
+        else if(k == 3 && ny < targetPos[tmp][0]) 
+            nh = h - 1;  // d 
         else
-            n = s[i] - '1';
-        sum += i != n;
-    }
-    return sum;
+            nh = h + 1; //走歪路了.
+        //不是合法结点.h(n) + g(n) > f(n)..
+        if(depth + nh >= maxDepth) 
+            continue; 
+        path[depth] = k; 
+        if(IDAStar(ns, depth+1, nh, k)) 
+            return true; 
+    } 
+    return false; 
 }
 
-bool do_move(string &s, char d)
-{
-    int i, x;
-    for(i = 0; i < 9; i++)
-        if(s[i] == 'x')
-        {
-            x = i;
-            break;
-        }
-
-    switch(d)
-    {
-        case 'u':
-            if(x <= 2)
-                return false;
-            s[x] = s[x - 3];
-            s[x - 3] = 'x';
-            break;
-        case 'd':
-            if(x >= 6)
-                return false;
-            s[x] = s[x + 3];
-            s[x + 3] = 'x';
-            break;
-        case 'l':
-            if(x % 3 <= 0)
-                return false;
-            s[x] = s[x - 1];
-            s[x - 1] = 'x';
-            break;
-        case 'r':
-            if(x % 3 >= 2)
-                return false;
-            s[x] = s[x + 1];
-            s[x + 1] = 'x';
-            break;
-    }
-    return true;
-}
-
-int main()
-{
-    char s[2];
-    string ori = "12345678x";
-    int i, j, sum;
-    char dir;
+int main() 
+{ 
+    char tmp; 
+    int index;
 #ifdef _POJ
     freopen("poj1077.txt", "r", stdin);
-    assert(calc("12345678x") == 0);
-    assert(calc("1234567x8") == 2);
-    assert(calc("12345x786") == 2);
-    char xx[40] = "dlurullddrurdllurdr";
-    ori = "23415x768";
-    for(i = 0; xx[i] != '\0'; i++)
-    {
-        assert(do_move(ori, xx[i]));
-    }
-    assert(ori == "12345678x");
 #endif
-
-    while(scanf("%s", s) != EOF && s[0] != '0')
+    while(cin >> tmp && !cin.eof())
     {
-        ori[0] = s[0];
-        for(i = 1; i < 9; i++)
-        {
-            scanf("%s", s);
-            ori[i] = s[0];
-        }
-        //cout << ori << "==";
-        sum = 0;
-        for(i = 0; i < 8; i++)
-            for(j = i + 1; j < 9; j++)
-                if(ori[j] != 'x' && ori[i] != 'x' && ori[j] < ori[i])
-                    sum++;
-        if(sum % 2 == 1)
-        {
-            //assert(astar_search(ori) == false);
-            cout << "unsolvable" << endl;
-        }
-        else if(ori == "12345678x")
-        {
-            printf("lr\n");
-        }
-        else if(astar_search(ori))
-        {
-            for(i = 0; res[i] != '\0'; i++)
-            {
-                assert(do_move(ori, res[i]));
-            }
-            assert(ori == "12345678x");
-            cout << res << endl;
-        }
-        else
-        {
-            cout << "unsolvable" << endl;
-        }
-    }
-    return 0;
-}
+        index=0; 
+        for(int i = 0; i != 3; ++i) 
+            for(int j = 0; j != 3; ++j) 
+            { 
+                if(!(i == 0 && j == 0))
+                    cin>>tmp; 
 
+                if(tmp == 'x') 
+                { 
+                    tmp = '9'; 
+                    init.px = i; 
+                    init.py = j; 
+                } 
+                init.board[i][j] = tmp - '0'; 
+                targetPos[++index][0] = i; 
+                targetPos[index][1] = j; 
+            } 
+        if(IsSolvable()) 
+        { 
+            int h = H(init); 
+            //迭代加深,搜索深度作为限制,这个算法还不是很了解..迭代加深..
+            for(maxDepth = h; ; maxDepth++) 
+                if(IDAStar(init, 0, h, -10)) 
+                    break;         
+        } 
+        else
+            cout<<"unsolvable"; 
+        cout << endl;
+    }
+    return 0; 
+}
