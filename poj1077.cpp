@@ -221,11 +221,11 @@ int main()
         }
         else if(astar_search(ori))
         {
-            //for(i = 0; res[i] != '\0'; i++)
-            //{
-            //    assert(do_move(ori, res[i]));
-            //}
-            //assert(ori == "12345678x");
+            for(i = 0; res[i] != '\0'; i++)
+            {
+                assert(do_move(ori, res[i]));
+            }
+            assert(ori == "12345678x");
             cout << res << endl;
         }
         else
