@@ -1,161 +1,209 @@
 #include<iostream>
 #include<cstdio>
 #include<cmath>
-#include<cstring>
+#include<cassert>
+#include<set>
+#include<climits>
 using namespace std;
+#define FOUND -1
+#define NOT_FOUND -2
+const char ALL_MVS[4] = {'u', 'd', 'l', 'r'};
 
-int mabs(int a)
+typedef struct
 {
-    if(a < 0)
-        return -a;
-    else
-        return a;
+    int state;
+    char m;
+} Node;
+
+
+int search(Node path[1000], int &count, set<int> &closeset, int g, int bound);
+
+inline int mabs(int a)
+{
+    return a < 0 ? -a : a;
 }
 
-struct Status 
-{ 
-    int board[3][3]; 
-    int px,py; 
-}; 
-Status init,target={1,2,3,4,5,6,7,8,9,2,2}; 
-int targetPos[10][2],path[10000],maxDepth; 
-int move[4][2]={0,-1,-1,0,0,1,1,0}; 
-
-/*
- *奇偶剪枝
- *每移动一次X方块,必定需要移动一次另外的方块
- *所以其他方块需要移动的次数+X方块移动的次数必定是偶数
- */
-bool IsSolvable() 
-{ 
-    int i,j,k=0,sum=0,array[9]; 
-    for(i=0; i!=3; ++i) 
-        for(j=0; j!=3; ++j) 
-            array[k++] = init.board[i][j]; 
-    //除了X结点外,要到达目标位置需要移动的最大步数,因为在转换成了一维后原本可以上下移动的都被转化成了水平移动.
-    //但是幸运的是,他们是同奇同偶的.具体的证明我也不知道,画图有这么个规律
-    for(i = 0; i != 8; ++i) 
-        for(j = i + 1; j != 9; ++j) 
-            if(array[i] > array[j]) 
-                sum++; 
-    //这个是X方块到目标位置的最短步数,不管怎么移动,只要最后是在目标位置,必定是同奇同偶的.(简单的考虑就是撤销)
-    //而每一次的其他方块的移动都是与X方块的交换来实现的,所以他们的和必定是偶数
-    sum += mabs(init.px - targetPos[9][0]) + mabs(init.py - targetPos[9][1]);     
-    return sum % 2 == 0; 
-}
-
-// heuristic function 
-//计算该状态需要移动的距离
-int H(Status &s)         
-{ 
-    int sum=0, tmp; 
-    for(int i = 0; i != 3; ++i) 
-        for(int j = 0; j != 3; ++j) 
-        { 
-            tmp = s.board[i][j]; 
-            if(tmp < 9) 
-                sum += mabs(i - targetPos[tmp][0]) + mabs(j-targetPos[tmp][1]); 
-        } 
-    return sum; 
-} 
-
-void Output(int depth) 
+int h(int State)
 {
-    for(int i=0; i < depth; ++i) 
-        if(path[i] == 0) 
-            cout<<'l'; 
-        else if(path[i] == 1) 
-            cout<<'u'; 
-        else if(path[i] == 2) 
-            cout<<'r'; 
-        else cout<<'d'; 
-} 
-
-bool IDAStar(Status &s, int depth, int h, int prev) 
-{ 
-    if(memcmp(&s, &target, sizeof(Status)) == 0) 
+    int i, t, sum = 0;
+    for(i = 1; i <= 9; i++)
     {
-        Output(depth); 
-        return true; 
-    } 
-    if(depth >= maxDepth) 
-        return false; 
-    Status ns; int nh,nx,ny,tmp;  //next status 
-    for(int k = 0; k != 4; ++k) 
-    { 
-        //这里会撤销上一步的移动,跳过
-        if(mabs(k - prev) == 2) 
-            continue; 
-        ns = s; 
-        nx = s.px + move[k][0]; 
-        ny = s.py + move[k][1]; 
-        //越界
-        if(nx < 0 || ny < 0 || nx == 3 || ny == 3) 
-            continue; 
-        //移动操作
-        tmp = s.board[nx][ny]; 
-        ns.board[s.px][s.py] = tmp; 
-        ns.board[nx][ny] = 9; 
-        ns.px = nx; ns.py = ny; 
-        //向上移动,并且x在与他交换的方块的目标位置的上方,也就是说,与他交换的方块理目标位置近了一步
-        //可能在上方也可能就是那个位置了
-        if(k == 0 && ny < targetPos[tmp][1]) 
-            nh = h - 1;   // l 
-        else if(k == 1 && nx < targetPos[tmp][0]) 
-            nh = h - 1;  // u 
-        else if(k == 2 && ny > targetPos[tmp][1]) 
-            nh = h - 1;  // r 
-        else if(k == 3 && ny < targetPos[tmp][0]) 
-            nh = h - 1;  // d 
-        else
-            nh = h + 1; //走歪路了.
-        //不是合法结点.h(n) + g(n) > f(n)..
-        if(depth + nh >= maxDepth) 
-            continue; 
-        path[depth] = k; 
-        if(IDAStar(ns, depth+1, nh, k)) 
-            return true; 
-    } 
-    return false; 
+        t = State % 10 - 1;
+        State /= 10; 
+        if(t != 8)
+            sum += mabs((9 - i) / 3 - t /3) + mabs((9 - i) % 3 - t % 3);
+    }
+    return sum;
 }
 
-int main() 
-{ 
-    char tmp; 
-    int index;
+int mv(int State, char dir)
+{
+    int i, a[9], x;
+    for(i = 8; i >= 0; i--)
+    {
+        a[i] = State % 10;
+        if(a[i] == 9)
+            x = i;
+        State /= 10;
+    }
+    switch(dir)
+    {
+        case 'u':
+            if(x <= 2)
+                return 0;
+            a[x] = a[x - 3];
+            a[x - 3] = 9;
+            break;
+        case 'd':
+            if(x >= 6)
+                return 0;
+            a[x] = a[x + 3];
+            a[x + 3] = 9;
+            break;
+        case 'l':
+            if(x % 3 == 0)
+                return 0;
+            a[x] = a[x - 1];
+            a[x - 1] = 9;
+            break;
+        case 'r':
+            if(x % 3 == 2)
+                return 0;
+            a[x] = a[x + 1];
+            a[x + 1] = 9;
+            break;
+    }
+    x = 0;
+    for(i = 0; i < 9; i++)
+        x = 10 * x + a[i];
+    return x;
+}
+
+inline bool is_goal(int State)
+{
+    return State == 123456789;
+}
+
+int ida_star(int root)
+{
+    int t, i, count, bound = h(root);
+    set<int> closeset;
+    Node path[1000];
+    Node rn = {root, 's'};
+    count = 0;
+    path[count++] = rn;
+    closeset.insert(root);
+    while(true)
+    {
+        t = search(path, count, closeset, 0, bound);
+        if(t == FOUND) 
+        {
+            for(i = 1; i < count; i++)
+                cout << path[i].m;
+            cout << endl;
+            return bound;
+        }
+        if(t == INT_MAX) return NOT_FOUND;
+        bound = t;
+    }
+}
+
+int successors(Node success_states[4], int state)
+{
+    int c = 0;
+    int i, NewState;
+    Node n;
+    for(i = 0; i < 4; i++)
+    {
+        NewState = mv(state, ALL_MVS[i]);
+        if(NewState != 0)
+        {
+            n.state = NewState;
+            n.m = ALL_MVS[i];
+            success_states[c++] = n;
+        }
+    }
+    return c;
+}
+
+int search(Node path[1000], int &count, set<int> &closeset, int g, int bound)
+{
+    Node succ, n = path[count - 1];
+    int state = n.state;
+    int f = g + h(state);
+    int min = INT_MAX;
+    int i, t, c;
+    Node success_states[4];
+    char mvs[4];
+    if(f > bound) return f;
+    if(is_goal(state)) return FOUND;
+    c = successors(success_states, state);
+    for(i = 0; i < c; i++)
+    {
+        succ = success_states[i];
+        if(closeset.count(succ.state) == 0)
+        {
+            path[count++] = succ;
+            closeset.insert(succ.state);
+            t = search(path, count, closeset, g + 1, bound);
+            if(t == FOUND) return FOUND;
+            if(t < min) min = t;
+            count--;
+            closeset.erase(succ.state);
+        }
+
+    }
+    return min;
+}
+
+bool solvable(int state)
+{
+    int i, j, sum = 0;
+    int a[9];
+    for(i = 8; i >= 0; i--)
+    {
+        a[i] = state % 10;
+        state /= 10;
+    }
+    for(i = 0; i < 8; i++)
+        for(j = i; j < 9; j++)
+            if(a[j] < a[i] && a[i] != 9)
+                sum++;
+    return sum % 2 == 0;
+}
+
+int main()
+{
+    char tmp;
+    int root, i;
 #ifdef _POJ
     freopen("poj1077.txt", "r", stdin);
-#endif
-    while(cin >> tmp && !cin.eof())
-    {
-        index=0; 
-        for(int i = 0; i != 3; ++i) 
-            for(int j = 0; j != 3; ++j) 
-            { 
-                if(!(i == 0 && j == 0))
-                    cin>>tmp; 
+    assert(h(123456789) == 0);
+    assert(h(123456798) == 1);
+    assert(h(129456783) == 2);
 
-                if(tmp == 'x') 
-                { 
-                    tmp = '9'; 
-                    init.px = i; 
-                    init.py = j; 
-                } 
-                init.board[i][j] = tmp - '0'; 
-                targetPos[++index][0] = i; 
-                targetPos[index][1] = j; 
-            } 
-        if(IsSolvable()) 
-        { 
-            int h = H(init); 
-            //迭代加深,搜索深度作为限制,这个算法还不是很了解..迭代加深..
-            for(maxDepth = h; ; maxDepth++) 
-                if(IDAStar(init, 0, h, -10)) 
-                    break;         
-        } 
+    assert(mv(123456789, 'u') == 123459786);
+    assert(mv(123456789, 'd') == 0);
+    assert(mv(123456789, 'l') == 123456798);
+    assert(mv(123456789, 'r') == 0);
+#endif
+    while(cin >> tmp && !cin.eof() && tmp != '0')
+    {
+        if(tmp == 'x')
+            tmp = '9';
+        root = tmp - '0';
+        for(i = 1; i < 9; i++)
+        {
+            cin >> tmp;
+            if(tmp == 'x')
+                tmp = '9';
+            root = 10 * root + tmp - '0';
+        }
+        if(solvable(root))
+            ida_star(root);
         else
-            cout<<"unsolvable"; 
-        cout << endl;
+            cout << "unsolvable" << endl;
     }
-    return 0; 
+    return 0;
 }
+
