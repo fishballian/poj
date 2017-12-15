@@ -1,19 +1,34 @@
-import java.util.Arrays;
-import java.util.Comparator;
+import java.io.*;
+import java.util.*;
 class CmpString implements Comparator{
     public int compare(Object a, Object b)
     {
         String as = (String)a;
         String bs = (String)b;
-        return as.length() - bs.length(); 
+        return calc_score(as) - calc_score(bs);
+    }
+
+    int calc_score(String s)
+    {
+        int score = 0;
+        for(int i = 0; i < s.length(); i++)
+            for(int j = i; j < s.length(); j++)
+                if(s.charAt(i) > s.charAt(j))
+                    score++;
+        return score;
     }
 }
 public class sort{
     public static void main(String args[])
     {
-        String[] a = {"dfe", "aaa", "defg", "dd"};
+        int i;
+        Scanner cin = new Scanner(System.in);
+        int n = cin.nextInt(), m = cin.nextInt();
+        String[] a = new String[m];
+        for(i = 0; i < m; i++)
+            a[i] = cin.next();
         Arrays.sort(a, new CmpString());
-        for(int i = 0; i < 4; i++)
+        for(i = 0; i < m; i++)
             System.out.println(a[i]);
     }
 }
