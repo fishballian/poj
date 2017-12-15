@@ -11,19 +11,26 @@ int Min;
 
 void dfs(int deep, int last, int round)
 {
-    int i = 0, j, round2 = round;
+    int j, round2;
     if(deep == N)
     {
         Min = min(Min, round);
         return;
     }
-    while(vis[i]) i++;
-    for(j = i; j < N; j++)
+    for(j = 0; j < N; j++)
     {
+        if(vis[j])
+            continue;
         if(mv[j][0] <= last)
-            round2++;
-        if(round2 >= Min)
-            return;
+        {
+            round2 = round + 1;
+            if(round2 >= Min)
+                continue;
+        }
+        else
+        {
+            round2 = round;
+        }
         vis[j] = true;
         dfs(deep + 1, mv[j][1], round2);
         vis[j] = false;
@@ -48,12 +55,12 @@ int main()
         for(int j = 0; j < N; j++)
         {
             cin >> mv[j][0] >> mv[j][1];
-            mv[j][0] = (mv[j][0] - 1) % 200;
-            mv[j][1] = (mv[j][1] - 1) % 200;
+            mv[j][0] = (mv[j][0] - 1) / 2;
+            mv[j][1] = (mv[j][1] - 1) / 2;
             if(mv[j][0] > mv[j][1])
                 swap(mv[j][0], mv[j][1]);
         }
-        qsort(mv, N, sizeof(mv[0]), &cmp);
+        //qsort(mv, N, sizeof(mv[0]), &cmp);
         Min = 200;
         memset(vis, 0, sizeof(vis));
         dfs(0, 200, 0);
