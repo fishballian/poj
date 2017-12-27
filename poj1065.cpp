@@ -1,62 +1,74 @@
 #include<iostream>
 #include<cstdio>
 #include<cstring>
-#include<vector>
-#include<algorithm>
+#include<climits>
+#include<cstdlib>
 using namespace std;
-class Stick
-{
-    public:
-        int length;
-        int weight;
-};
+int T, n, r;
+int a[5000][2];
+bool vis[5000];
 
-bool compare_length(Stick a, Stick b)
+int cmp(const void *a, const void *b)
 {
-    return a.length < b.length;
+    int *ap = (int *)a;
+    int *bp = (int *)b;
+    if(ap[0] == bp[0])
+        return ap[1] - bp[1];
+    else
+        return ap[0] - bp[0];
 }
 
-bool compare_wight(Stick a, Stick b)
+void dfs(int d, int t, int lastl, int lastw)
 {
-    return a.weight < b.weight;
+    int t2;
+    bool f;
+    if(d >= n)
+    {
+        if(t < r)
+            r = t;
+        return;
+    }
+    for(int i = 0; i < n; i++)
+    {
+        if(vis[i])
+            continue;
+        if(a[i][0] >= lastl && a[i][1] >= lastw)
+            t2 = t;
+        else
+            t2 = t + 1;
+        f = false;
+        for(int j = 0; j < i; j++)
+            if(!vis[j] && a[j][0] < a[i][0] && a[j][1] < a[i][1])
+            {
+                f = true;
+                break;
+            }
+        if(f)
+            continue;
+        vis[i] = true;
+        dfs(d + 1, t2, a[i][0], a[i][1]);
+        vis[i] = false;
+
+    }
 }
 
 int main()
 {
-    int T, n, c, t, r;
-    Stick a[5000];
-    bool vis[5000];
-    vector<Stick> v;
-    vector<Stick>::iterator it;
 #ifdef _POJ
     freopen("poj1065.txt", "r", stdin);
 #endif
     cin >> T;
     for(int i = 0; i < T; i++)
     {
-        v.clear();
-        memset(vis, 0, sizeof(vis));
-        r = c = 0;
         cin >> n;
         for(int j = 0; j < n; j++)
-            cin >> a[j].length >> a[j].weight; 
-        v.assign(a, a + n - 1);
-        stable_sort(v.begin(), v.end(), compare_wight);
-        stable_sort(v.begin(), v.end(), compare_length);
-        while(c < n)
-        {
-            t = 0;
-            while(vis[t]) t++;
-            r++;
-            vis[t] = true;
-            c++;
-            for(int j = t + 1; j < n; j++)
-                if(a[j].length >= a[t].length && a[j].weight >= a[t].weight)
-                {
-                    vis[j] = true;
-                    c++;
-                }
-        }
+            cin >> a[j][0] >> a[j][1];
+        qsort(a, n, sizeof(a[0]), &cmp);
+        //for(int j = 0; j < n; j++)
+        //    cout << a[j][0] << "," << a[j][1] << endl;
+        memset(vis, 0, sizeof(vis));
+        r = INT_MAX; 
+        dfs(0, 0, INT_MAX, INT_MAX);
         cout << r << endl;
     }
     return 0;
