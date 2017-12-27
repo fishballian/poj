@@ -45,6 +45,8 @@ void dfs(int d, int t, int lastl, int lastw)
             }
         if(f)
             continue;
+        if(t2 >= r)
+            continue;
         vis[i] = true;
         dfs(d + 1, t2, a[i][0], a[i][1]);
         vis[i] = false;
@@ -67,7 +69,7 @@ int main()
         //for(int j = 0; j < n; j++)
         //    cout << a[j][0] << "," << a[j][1] << endl;
         memset(vis, 0, sizeof(vis));
-        r = INT_MAX; 
+        r = INT_MAX;
         dfs(0, 0, INT_MAX, INT_MAX);
         cout << r << endl;
     }
