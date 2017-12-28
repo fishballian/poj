@@ -1,78 +1,63 @@
-#include<iostream>
 #include<cstdio>
-#include<cstring>
-#include<climits>
+#include<iostream>
 #include<cstdlib>
+#include<cmath>
+
 using namespace std;
-int T, n, r;
-int a[5000][2];
-bool vis[5000];
+
+#define MAXN 5000
 
 int cmp(const void *a, const void *b)
 {
-    int *ap = (int *)a;
-    int *bp = (int *)b;
-    if(ap[0] == bp[0])
-        return ap[1] - bp[1];
+    if(((int *)a)[0] == ((int *)b)[0])
+        return ((int *)a)[1] - ((int *)b)[1];
     else
-        return ap[0] - bp[0];
-}
-
-void dfs(int d, int t, int lastl, int lastw)
-{
-    int t2;
-    bool f;
-    if(d >= n)
-    {
-        if(t < r)
-            r = t;
-        return;
-    }
-    for(int i = 0; i < n; i++)
-    {
-        if(vis[i])
-            continue;
-        if(a[i][0] >= lastl && a[i][1] >= lastw)
-            t2 = t;
-        else
-            t2 = t + 1;
-        f = false;
-        for(int j = 0; j < i; j++)
-            if(!vis[j] && a[j][0] < a[i][0] && a[j][1] < a[i][1])
-            {
-                f = true;
-                break;
-            }
-        if(f)
-            continue;
-        if(t2 >= r)
-            continue;
-        vis[i] = true;
-        dfs(d + 1, t2, a[i][0], a[i][1]);
-        vis[i] = false;
-
-    }
+        return ((int *)a)[0] - ((int *)b)[0];
 }
 
 int main()
 {
+    int temp[MAXN];
+    int a[MAXN][2];
+    int T, n, sum;
+    bool bz;
 #ifdef _POJ
     freopen("poj1065.txt", "r", stdin);
 #endif
     cin >> T;
-    for(int i = 0; i < T; i++)
+
+    for(int i = 0; i < T; i ++)
     {
         cin >> n;
-        for(int j = 0; j < n; j++)
-            cin >> a[j][0] >> a[j][1];
+        for(int i = 0; i < n; i ++)
+            cin >> a[i][0] >> a[i][1]; 
         qsort(a, n, sizeof(a[0]), &cmp);
-        //for(int j = 0; j < n; j++)
-        //    cout << a[j][0] << "," << a[j][1] << endl;
-        memset(vis, 0, sizeof(vis));
-        r = INT_MAX;
-        dfs(0, 0, INT_MAX, INT_MAX);
-        cout << r << endl;
+        temp[0] = a[0][1];
+        sum = 0;
+        for(int i = 1; i < n; i ++)
+        {
+            bz = false;
+            if(a[i][1] < temp[sum])
+            {
+                sum++;
+                temp[sum] = a[i][1];
+                bz = true;
+            }
+            else
+            {
+                for(int j = sum - 1; j >= 0; j --)
+                {
+                    if(a[i][1] < temp[j])
+                    {
+                        temp[j + 1] = max(temp[j + 1], a[i][1]);
+                        bz = true;
+                    }
+                }
+            }
+            if(!bz)
+                temp[0] = a[i][1];
+        }
+        cout << sum + 1 << endl;
     }
     return 0;
 }
-
