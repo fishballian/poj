@@ -3,3 +3,4 @@ tags
 example-*
 *.class
 *.swp
+out.txt

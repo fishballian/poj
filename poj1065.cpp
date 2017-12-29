@@ -22,7 +22,8 @@ int main()
     int T, n, sum;
     bool bz;
 #ifdef _POJ
-    freopen("poj1065.txt", "r", stdin);
+    FILE *in = freopen("poj1065.txt", "r", stdin);
+    FILE *out = freopen("out.txt", "w", stdout);
 #endif
     cin >> T;
 
@@ -59,5 +60,11 @@ int main()
         }
         cout << sum + 1 << endl;
     }
+#ifdef _POJ
+    fclose(stdin);
+    freopen("/dev/tty", "w", stdout);
+    system("cat out.txt");
+    fclose(stdout);
+#endif
     return 0;
 }
