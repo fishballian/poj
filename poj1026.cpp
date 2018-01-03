@@ -21,7 +21,7 @@ int main()
         {
             t = a[i] - 1;
             c = 1;
-            while(t != i && c <= n)
+            while(t != i)
             {
                 tran[i][c] = t;
                 c++;
@@ -31,7 +31,8 @@ int main()
         }
         while(cin >> k && k > 0)
         {
-            scanf(" %[^\n]", s);
+            getchar();
+            scanf("%[^\n]", s);
             for(int i = strlen(s); i < n; i++)
                 s[i] = ' ';
             s[n] = '\0';
